@@ -46,6 +46,8 @@ class Migration(migrations.Migration):
 
 From this point it's just a matter of running `migrate` to apply your data migrations.
 
+Note that this solution also supports rolling back your migration (by deleting using primary key) - thus if you don't want your data removed when doing a rollback you should fake.  
+
 ## API
 
 `fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False)`
@@ -55,17 +57,17 @@ From this point it's just a matter of running `migrate` to apply your data migra
 - *fixtures_dir* is the directory inside your app that contains the fixtures
 - *ignore_does_not_exist* if set to True then `django_migration_fixture.FixtureObjectDoesNotExist` is raised if when attempting a rollback the object in the fixture does not exist.
 
-Essentially `fixture()` returns a dict containing the keys 'code' and 'reverse_code' which attempt to apply your fixture and remove your fixture, respectively.
+Essentially `fixture()` returns a dict containing the keys 'code' and 'reverse_code' which attempt to apply your fixture and rollback your fixture, respectively.
 
 ## Inspiration
 
-While attempting to migrate a large django project to 1.7 I came across an issue which caused me to create django [ticket 24023](https://code.djangoproject.com/ticket/24023#ticket). 
+While attempting to migrate a large Django project to 1.7 I came across an issue which caused me to create Django [ticket 24023](https://code.djangoproject.com/ticket/24023#ticket). 
 
 The project has a lot of fixtures that ensure a baseline state and converting them to code isn't really ideal, thus this project.
 
-## Note
+That issue has since been closed as a duplicate of [ticket 23699](https://code.djangoproject.com/ticket/23699) which itself has been closed and released in Django 1.7.2.
 
-In case you're attempting to run tests in django >1.7 but <1.7.2 then you may want to look at [this](https://github.com/alexhayes/apps-with-migrations-and-initial-data-break-tests) and [#23699](https://code.djangoproject.com/ticket/23699). Long story short, make sure you're running django 1.7.2+.
+Needless to say, you may still need to create data migrations for your initial_data.* files, regardless of the issue I came across.
 
 ## Author
 
