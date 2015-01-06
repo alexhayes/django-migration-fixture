@@ -9,7 +9,7 @@ Essentially it leaves the initial_data.* file in place and generates a data migr
 ## Install
 
 ```bash
-pip install git+https://github.com/alexhayes/django-migration-fixture.git
+pip install django-migration-fixture
 ```
 
 Then add `django_migration_fixture` to your INSTALLED_APPS.
