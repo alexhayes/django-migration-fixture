@@ -4,13 +4,11 @@ import os
 import re
 
 from django.apps import apps
-from django.conf import settings
 from django.core import management
 from django.core.management import BaseCommand
 from django.core.management.base import CommandError
 from django.db.migrations import writer
 
-search_migration_c = re.compile(r'([0-9]{4}.*\.py)')
 
 class Command(BaseCommand):
     help = "Locate initial_data.* files and create data migrations for them."
@@ -94,13 +92,5 @@ class Command(BaseCommand):
         management.call_command('makemigrations', app.label, empty=True, stdout=out)
 
         self.restore_migration_template()
-
-        # Locate the migration file in the output
-        migrations = search_migration_c.findall(out.getvalue())
-
-        if len(migrations) != 1:
-            raise CommandError("Failure: %s" % out.getvalue())
-
-        migration_path = os.path.join(app.path, 'migrations', migrations[0])
 
         self.stdout.write(out.getvalue())
