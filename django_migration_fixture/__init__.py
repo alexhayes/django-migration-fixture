@@ -7,9 +7,13 @@ class FixtureObjectDoesNotExist(Exception):
     pass
 
 
-def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False):
+def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False, reversible=True):
     """
     Load fixtures using a data migration.
+
+    The migration will by default provide a rollback, deleting items by primary
+    key. This is not always what you want ; you may set reversible=False to
+    prevent rolling back.
 
     Usage:
 
@@ -55,4 +59,12 @@ def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False):
                 if not raise_does_not_exist:
                     raise FixtureObjectDoesNotExist("Model %s instance with kwargs %s does not exist." % (model, kwargs))
 
-    return dict(code=load_fixture, reverse_code=unload_fixture)
+    def not_implemented(apps, schema_editor):
+        raise RuntimeError('This migration is one-way and cannot be reverted')
+
+    if reversible:
+        reverse_code = unload_fixture
+    else:
+        reverse_code = not_implemented
+
+    return dict(code=load_fixture, reverse_code=reverse_code)
