@@ -1,4 +1,7 @@
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 import glob
 import os
 import re
@@ -45,9 +48,9 @@ class Command(BaseCommand):
         module_split = app.module.__name__.split('.')
 
         if len(module_split) == 1:
-            module_import = "import %s\n" % module_split[0]
+            module_import = "import {}\n".format(module_split[0])
         else:
-            module_import = "from %s import %s\n" % (
+            module_import = "from {} import {}\n".format(
                 '.'.join(module_split[:-1]),
                 module_split[-1:][0],
             )
