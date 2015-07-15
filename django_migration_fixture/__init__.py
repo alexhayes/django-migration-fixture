@@ -1,5 +1,6 @@
 import os
 from django.core import serializers
+from six import string_types
 
 
 class FixtureObjectDoesNotExist(Exception):
@@ -22,7 +23,7 @@ def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False):
     ]
     """
     fixture_path = os.path.join(app.__path__[0], fixtures_dir)
-    if isinstance(fixtures, basestring):
+    if isinstance(fixtures, string_types):
         fixtures = [fixtures]
 
     def get_format(fixture):

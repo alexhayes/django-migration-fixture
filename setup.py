@@ -13,7 +13,7 @@ setup(
     name='django-migration-fixture',
     packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
     license='MIT',
-    version=VERSION,
+    version=str(VERSION),
     description="Django app to easily turn initial_data.* fixtures into Django 1.7 data migrations.",
     author='Alex Hayes',
     author_email='alex@alution.com',
@@ -40,6 +40,7 @@ setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
     ],
 
     include_package_data=True,
