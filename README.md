@@ -52,12 +52,13 @@ Another option is to block the rolling back by passing `reversible=False` to `fi
 
 ## API
 
-`fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False)`
+`fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False, reversible=True)`
 
 - *app* is a Django app that contains your fixtures
 - *fixtures* can take either a string or a list of fixture files. The extension is used as the format supplied to `django.core.serializers.deserialize`
 - *fixtures_dir* is the directory inside your app that contains the fixtures
 - *ignore_does_not_exist* if set to True then `django_migration_fixture.FixtureObjectDoesNotExist` is raised if when attempting a rollback the object in the fixture does not exist.
+- *reversible* if set to False then any attempt to reverse the migration will raise `django.db.migrations.migration.IrreversibleError`.
 
 Essentially `fixture()` returns a dict containing the keys 'code' and 'reverse_code' which attempt to apply your fixture and rollback your fixture, respectively.
 

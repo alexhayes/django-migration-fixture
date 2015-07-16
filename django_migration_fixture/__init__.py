@@ -4,11 +4,14 @@ from six import string_types
 
 
 class FixtureObjectDoesNotExist(Exception):
-    """Raised when attempting to roll back a fixture and the instance can't be found"""
+    """
+    Raised if when attempting to roll back a fixture the instance can't be found
+    """
     pass
 
 
-def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False, reversible=True):
+def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False,
+            reversible=True):
     """
     Load fixtures using a data migration.
 
@@ -24,6 +27,7 @@ def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False, 
     operations = [
         migrations.RunPython(**fixture(myapp, 'eggs.yaml')),
         migrations.RunPython(**fixture(anotherapp, ['sausage.json', 'walks.yaml']))
+        migrations.RunPython(**fixture(yap, ['foo.json'], reversible=False))
     ]
     """
     fixture_path = os.path.join(app.__path__[0], fixtures_dir)
@@ -36,7 +40,9 @@ def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False, 
     def get_objects():
         for fixture in fixtures:
             with open(os.path.join(fixture_path, fixture), 'rb') as f:
-                objects = serializers.deserialize(get_format(fixture), f, ignorenonexistent=True)
+                objects = serializers.deserialize(get_format(fixture),
+                                                  f,
+                                                  ignorenonexistent=True)
                 for obj in objects:
                     yield obj
 
@@ -58,14 +64,13 @@ def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False, 
                 model.objects.get(**kwargs).delete()
             except model.DoesNotExist:
                 if not raise_does_not_exist:
-                    raise FixtureObjectDoesNotExist("Model %s instance with kwargs %s does not exist." % (model, kwargs))
+                    raise FixtureObjectDoesNotExist(("Model %s instance with "
+                                                     "kwargs %s does not exist."
+                                                     % (model, kwargs)))
 
-    def not_implemented(apps, schema_editor):
-        raise RuntimeError('This migration is one-way and cannot be reverted')
+    kwargs = dict(code=load_fixture)
 
     if reversible:
-        reverse_code = unload_fixture
-    else:
-        reverse_code = not_implemented
+        kwargs['reverse_code'] = unload_fixture
 
-    return dict(code=load_fixture, reverse_code=reverse_code)
+    return kwargs
