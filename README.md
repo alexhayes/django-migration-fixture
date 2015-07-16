@@ -46,7 +46,9 @@ class Migration(migrations.Migration):
 
 From this point it's just a matter of running `migrate` to apply your data migrations.
 
-Note that this solution also supports rolling back your migration (by deleting using primary key) - thus if you don't want your data removed when doing a rollback you should fake.  
+Note that this solution also supports rolling back your migration (by deleting using primary key) - thus if you don't want your data removed when doing a rollback you should fake.
+
+Another option is to block the rolling back by passing `reversible=False` to `fixture()`.
 
 ## API
 
