@@ -1,51 +1,126 @@
-from codecs import open
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+try:
+    from setuptools import setup, find_packages
+    from setuptools.command.test import test
+    is_setuptools = True
+except ImportError:
+    raise
+    from ez_setup import use_setuptools
+    use_setuptools()
+    from setuptools import setup, find_packages           # noqa
+    from setuptools.command.test import test              # noqa
+    is_setuptools = False
+
 import os
+import sys
+import codecs
 
-from setuptools import setup, find_packages
+NAME = 'django-migration-fixture'
+extra = {}
+
+# -*- Classifiers -*-
+
+classes = """
+    Development Status :: 4 - Beta
+    Framework :: Django
+    Framework :: Django :: 1.7
+    Framework :: Django :: 1.8
+    License :: OSI Approved :: MIT License
+    Topic :: Database
+    Topic :: Software Development :: Code Generators
+    Intended Audience :: Developers
+    Programming Language :: Python
+    Programming Language :: Python :: 2
+    Programming Language :: Python :: 2.7
+    Programming Language :: Python :: Implementation :: CPython
+    Operating System :: OS Independent
+    Operating System :: POSIX
+    Operating System :: Microsoft :: Windows
+    Operating System :: MacOS :: MacOS X
+"""
+classifiers = [s.strip() for s in classes.split('\n') if s]
+
+# -*- Distribution Meta -*-
+
+import re
+re_meta = re.compile(r'__(\w+?)__\s*=\s*(.*)')
+re_vers = re.compile(r'VERSION\s*=.*?\((.*?)\)')
+re_doc = re.compile(r'^"""(.+?)"""')
+rq = lambda s: s.strip("\"'")
+
+def add_default(m):
+    attr_name, attr_value = m.groups()
+    return ((attr_name, rq(attr_value)), )
 
 
-ROOT = os.path.abspath(os.path.dirname(__file__))
+def add_version(m):
+    v = list(map(rq, m.groups()[0].split(', ')))
+    return (('VERSION', '.'.join(v[0:3]) + ''.join(v[3:])), )
 
-with open(os.path.join(ROOT, 'VERSION')) as f:
-    VERSION = f.read().strip()
+
+def add_doc(m):
+    return (('doc', m.groups()[0]), )
+
+pats = {re_meta: add_default,
+        re_vers: add_version,
+        re_doc: add_doc}
+here = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(here, 'django_migration_fixture/__init__.py')) as meta_fh:
+    meta = {}
+    for line in meta_fh:
+        if line.strip() == '# -eof meta-':
+            break
+        for pattern, handler in pats.items():
+            m = pattern.match(line.strip())
+            if m:
+                meta.update(handler(m))
+
+# -*- Installation Requires -*-
+
+py_version = sys.version_info
+
+
+def strip_comments(l):
+    return l.split('#', 1)[0].strip()
+
+
+def reqs(*f):
+    return [
+        r for r in (
+            strip_comments(l) for l in open(
+                os.path.join(os.getcwd(), 'requirements', *f)).readlines()
+        ) if r]
+
+install_requires = reqs('default.txt')
+
+# -*- Tests Requires -*-
+
+tests_require = reqs('test.txt')
+
+# -*- Long Description -*-
+
+if os.path.exists('README.rst'):
+    long_description = codecs.open('README.rst', 'r', 'utf-8').read()
+else:
+    long_description = 'See http://pypi.python.org/pypi/django-migration-fixture'
+
+# -*- %%% -*-
 
 setup(
-    name='django-migration-fixture',
-    packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
+    name=NAME,
+    version=meta['VERSION'],
+    description=meta['doc'],
+    author=meta['author'],
+    author_email=meta['contact'],
+    url=meta['homepage'],
+    platforms=['any'],
     license='MIT',
-    version=str(VERSION),
-    description="Django app to easily turn initial_data.* fixtures into Django 1.7 data migrations.",
-    author='Alex Hayes',
-    author_email='alex@alution.com',
-    url='https://github.com/alexhayes/django-migration-fixture',
-    download_url='https://github.com/alexhayes/django-migration-fixture/tarball/%s' % VERSION,
-    keywords=['django', 'migrations', 'initial data'],
-
-    # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
-    classifiers=[
-        # How mature is this project? Common values are
-        #   3 - Alpha
-        #   4 - Beta
-        #   5 - Production/Stable
-        'Development Status :: 4 - Beta',
-
-        # Indicate who your project is intended for
-        'Intended Audience :: Developers',
-        'Topic :: Database',
-        'Topic :: Software Development :: Code Generators',
-
-        # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: MIT License',
-
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-    ],
-
-    include_package_data=True,
-
-)
+    packages=find_packages(exclude=['tests', 'tests.*', 'scripts']),
+    zip_safe=False,
+    install_requires=install_requires,
+    keywords=['django', 'migrations', 'initial data', 'fixtures'],
+    classifiers=classifiers,
+    long_description=long_description)
 
