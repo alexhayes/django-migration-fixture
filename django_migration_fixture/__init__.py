@@ -1,6 +1,30 @@
+# -*- coding: utf-8 -*-
+"""Easily use fixtures in Django 1.7+ data migrations."""
+# :copyright: (c) 2015 Alex Hayes and individual contributors,
+#                 All rights reserved.
+# :license:   MIT License, see LICENSE for more details.
+
+from collections import namedtuple
+
+version_info_t = namedtuple(
+    'version_info_t', ('major', 'minor', 'micro', 'releaselevel', 'serial'),
+)
+
+VERSION = version_info_t(0, 5, 0, '', '')
+__version__ = '{0.major}.{0.minor}.{0.micro}{0.releaselevel}'.format(VERSION)
+__author__ = 'Alex Hayes'
+__contact__ = 'alex@alution.com'
+__homepage__ = 'http://github.com/alexhayes/django-migration-fixture'
+__docformat__ = 'restructuredtext'
+
+# -eof meta-
+
+from contextlib import contextmanager
 import os
+import django
 from django.core import serializers
 from six import string_types
+from functools import wraps
 
 
 class FixtureObjectDoesNotExist(Exception):
@@ -11,7 +35,7 @@ class FixtureObjectDoesNotExist(Exception):
 
 
 def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False,
-            reversible=True):
+            reversible=True, models=[]):
     """
     Load fixtures using a data migration.
 
@@ -46,10 +70,34 @@ def fixture(app, fixtures, fixtures_dir='fixtures', raise_does_not_exist=False,
                 for obj in objects:
                     yield obj
 
+    def patch_apps(func):
+        """
+        Patch the app registry.
+
+        Note that this is necessary so that the Deserializer does not use the
+        current version of the model, which may not necessarily be representative
+        of the model the fixture was created for.
+        """
+        @wraps(func)
+        def inner(apps, schema_editor):
+            try:
+                # Firstly patch the serializers registry
+                original_apps = django.core.serializers.python.apps
+                django.core.serializers.python.apps = apps
+                return func(apps, schema_editor)
+
+            finally:
+                # Ensure we always unpatch the serializers registry
+                django.core.serializers.python.apps = original_apps
+
+        return inner
+
+    @patch_apps
     def load_fixture(apps, schema_editor):
         for obj in get_objects():
             obj.save()
 
+    @patch_apps
     def unload_fixture(apps, schema_editor):
         for obj in get_objects():
             model = apps.get_model(app.__name__, obj.object.__class__.__name__)
